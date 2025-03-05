@@ -4,13 +4,14 @@ import { errorHandler } from "./middlewares/errorHandler.middleware.js";
 import { productRouter } from './routes/product.routes.js';
 import Dotenv from 'dotenv';
 import { userRouter } from './routes/user.routes.js';
+import { verifyToken } from './middlewares/jwtVerify.middleware.js';
 Dotenv.config();
 
 
 const app: Application = express();
 app.use(express.json());
 app.use(errorHandler);
-app.use('/product', productRouter);
+app.use('/product', verifyToken, productRouter);
 app.use('/user', userRouter);
 
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 3000;

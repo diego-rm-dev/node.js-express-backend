@@ -42,3 +42,11 @@ userRouter.delete('/:id', async (req: Request, res: Response, next: NextFunction
         next(error);
     }
 });
+
+userRouter.post('/login', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        await userController.loginController(req, res, next);
+    } catch (error) {
+        next(error);
+    }
+});

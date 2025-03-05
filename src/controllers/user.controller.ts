@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { getUsersService, getUserByPkService, updateUserService, saveUserService, deleteUserService } from "../services/user.service.js";
+import { getUsersService, getUserByPkService, updateUserService, saveUserService, deleteUserService, loginService } from "../services/user.service.js";
 import { IUser } from "../interfaces/user.interface.js";
 
 const getUsersController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -51,10 +51,25 @@ const deleteUserController = async (req: Request, res: Response, next: NextFunct
     }
 }
 
+export const loginController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email, password } = req.body
+        const token = await loginService(email, password)
+
+        if (!token) {
+            return res.status(401).json({ message: "Invalid credentials" })
+        }
+
+        return res.json({ token })
+    } catch (err: unknown) {
+        next(err);
+    }
+}
 export const userController = {
     getUsersController,
     getUserByPkController,
     saveUserController,
     updateUserController,
-    deleteUserController
+    deleteUserController,
+    loginController
 }
