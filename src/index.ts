@@ -8,7 +8,6 @@ import { options, swaggerJsdoc, swaggerUi } from './config/swagger/openapi.confi
 import './config/database/connection.ts';
 
 Dotenv.config();
-
 const app: Application = express();
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
@@ -22,6 +21,11 @@ app.use(
     swaggerUi.setup(specs)
 );
 
+app.get("/greet", (req, res) => {
+    const name = req.query.name || "World";
+    res.json({ message: `Hello, ${name}!` });
+});
+
 app.use('/products', verifyToken, productRouter);
 app.use('/users', userRouter);
 app.get('/hi', (req: Request, res: Response) => {
@@ -29,6 +33,11 @@ app.get('/hi', (req: Request, res: Response) => {
 })
 
 app.use(errorHandler);
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}!`);
-});
+
+if (process.env.NODE_ENV !== "test") {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}!`);
+    });
+}
+
+export default app;
