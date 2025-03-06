@@ -2,6 +2,7 @@ import { IUser } from "../interfaces/user.interface.js";
 import { userModel } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { configDotenv } from "dotenv";
+import Bcrypt from 'bcrypt';
 
 configDotenv();
 
@@ -39,18 +40,23 @@ export const getUserByPkService = async (id: string): Promise<IUser | null> => {
 
 export const saveUserService = async (userSave: IUser): Promise<IUser> => {
     try {
-        const savedUser = await userModel.create(userSave) as IUser;
-        return savedUser;
+        userSave.password = await Bcrypt.hash(userSave.password, 12)
+
+        const savedUser = await userModel.create(userSave) as IUser
+
+        return savedUser
     } catch (err: unknown) {
         if (err instanceof Error) {
-            throw new Error(`Error saving user: ${err.message}`);
+            throw new Error(`Error saving user: ${err.message}`)
         }
-        throw new Error("Unknown error saving user");
+        throw new Error("Unknown error saving user")
     }
 }
-
 export const updateUserService = async (id: string, userSave: IUser): Promise<IUser> => {
     try {
+        if (userSave.password) {
+            userSave.password = await Bcrypt.hash(userSave.password, 12);
+        }
         const updatedUser = await userModel.findByIdAndUpdate
             (id, userSave, { new: true }) as IUser | null;
         if (!updatedUser) {
@@ -82,9 +88,14 @@ export const deleteUserService = async (id: string): Promise<IUser> => {
 
 export const loginService = async (email: string, password: string): Promise<string | null> => {
     try {
-        const user = await userModel.findOne({ email, password }) as IUser | null
+        const user = await userModel.findOne({ email }) as IUser | null
         if (!user) {
             throw new Error("User not found")
+        }
+
+        const isMatch: boolean = await Bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            throw new Error("Invalid credentials")
         }
 
         // Crear payload con la información que quieres incluir en el token
