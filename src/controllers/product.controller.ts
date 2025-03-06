@@ -1,76 +1,59 @@
-import { Request, Response, NextFunction } from "express";
-import { getProductsService, getProductByPkService, saveProductService, updateProductService, deleteProductService } from "../services/product.service.js";
-import { IProduct } from "../interfaces/product.interface.js";
+import { Request, Response, NextFunction } from "express"
+import {
+    getProductsService,
+    getProductByPkService,
+    saveProductService,
+    updateProductService,
+    deleteProductService
+} from "../services/product.service.js"
+import { IProduct } from "../interfaces/product.interface.js"
 
-export const getProductsController = async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
+/** 🔹 Obtener todos los productos */
+export const getProductsController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const foundProducts: IProduct[] = await getProductsService();
-        return res.status(200).json({
-            message: "Products found",
-            products: foundProducts,
-        });
-    } catch (error: unknown) {
-        next(error);
-        return res;
+        const products: IProduct[] = await getProductsService()
+        res.status(200).json({ success: true, message: "Products found", data: products })
+    } catch (error) {
+        next(error)
     }
-};
+}
 
-export const getProductByPkController = async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
+/** 🔹 Obtener un producto por ID */
+export const getProductByPkController = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
-        const { id } = req.params;
-        const foundProduct: IProduct | null = await getProductByPkService(id);
-        if (!foundProduct) {
-            return res.status(404).json({ message: "Product not found" });
-        }
-        return res.status(200).json({
-            message: "Product found",
-            product: foundProduct
-        });
-    } catch (error: unknown) {
-        next(error);
-        return res;
+        const product: IProduct = await getProductByPkService(req.params.id)
+        res.status(200).json({ success: true, message: "Product found", data: product })
+    } catch (error) {
+        next(error)
     }
-};
+}
 
-export const saveProductController = async (req: Request<{}, {}, IProduct>, res: Response, next: NextFunction): Promise<Response> => {
+/** 🔹 Guardar un nuevo producto */
+export const saveProductController = async (req: Request<{}, {}, IProduct>, res: Response, next: NextFunction) => {
     try {
-        const productData: IProduct = req.body;
-        const savedProduct: IProduct = await saveProductService(productData);
-        return res.status(201).json({
-            message: "Product saved",
-            product: savedProduct
-        });
-    } catch (error: unknown) {
-        next(error);
-        return res;
+        const savedProduct: IProduct = await saveProductService(req.body)
+        res.status(201).json({ success: true, message: "Product saved successfully", data: savedProduct })
+    } catch (error) {
+        next(error)
     }
-};
+}
 
-export const updateProductController = async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
+/** 🔹 Actualizar un producto */
+export const updateProductController = async (req: Request<{ id: string }, {}, IProduct>, res: Response, next: NextFunction) => {
     try {
-        const { id } = req.params;
-        const productData: IProduct = req.body;
-        const updatedProduct: IProduct = await updateProductService(id, productData);
-        return res.status(200).json({
-            message: "Product updated",
-            product: updatedProduct
-        });
-    } catch (error: unknown) {
-        next(error);
-        return res;
+        const updatedProduct: IProduct = await updateProductService(req.params.id, req.body)
+        res.status(200).json({ success: true, message: "Product updated successfully", data: updatedProduct })
+    } catch (error) {
+        next(error)
     }
-};
+}
 
-export const deleteProductController = async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
+/** 🔹 Eliminar un producto */
+export const deleteProductController = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
-        const { id } = req.params;
-        const deletedProduct: IProduct = await deleteProductService(id);
-        return res.status(200).json({
-            message: "Product deleted",
-            product: deletedProduct
-        });
-    } catch (error: unknown) {
-        next(error);
-        return res;
+        await deleteProductService(req.params.id)
+        res.status(200).json({ success: true, message: "Product deleted successfully" })
+    } catch (error) {
+        next(error)
     }
-};
+}

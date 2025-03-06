@@ -109,7 +109,7 @@ productRouter.get("/", async (req: Request, res: Response, next: NextFunction): 
  *       401:
  *         description: No autorizado. El token es requerido.
  */
-productRouter.get("/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+productRouter.get("/:id", async (req: Request<{ id: string }>, res: Response, next: NextFunction): Promise<void> => {
     try {
         await getProductByPkController(req, res, next)
     } catch (error) {
@@ -178,7 +178,7 @@ productRouter.post("/", async (req: Request, res: Response, next: NextFunction):
  *       401:
  *         description: No autorizado. El token es requerido.
  */
-productRouter.put("/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+productRouter.put("/:id", async (req: Request<{ id: string }>, res: Response, next: NextFunction): Promise<void> => {
     try {
         await updateProductController(req, res, next)
     } catch (error) {
@@ -210,7 +210,7 @@ productRouter.put("/:id", async (req: Request, res: Response, next: NextFunction
  *       401:
  *         description: No autorizado. El token es requerido.
  */
-productRouter.delete("/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+productRouter.delete("/:id", async (req: Request<{ id: string }>, res: Response, next: NextFunction): Promise<void> => {
     try {
         await deleteProductController(req, res, next)
     } catch (error) {

@@ -1,117 +1,106 @@
-import { IUser } from "../interfaces/user.interface.js";
-import { userModel } from "../models/user.model.js";
-import jwt from "jsonwebtoken";
-import { configDotenv } from "dotenv";
-import Bcrypt from 'bcrypt';
+import { IUser } from "../interfaces/user.interface.js"
+import { userModel } from "../models/user.model.js"
+import jwt from "jsonwebtoken"
+import { configDotenv } from "dotenv"
+import Bcrypt from "bcrypt"
+import { AppError } from "../interfaces/errors/appError.interface.js"
 
-configDotenv();
+configDotenv()
 
-const SECRET_KEY = process.env.SECRET_KEY as string;
+const SECRET_KEY = process.env.SECRET_KEY as string
 
+/** 🔹 Obtener todos los usuarios */
 export const getUsersService = async (): Promise<IUser[]> => {
     try {
-        const users = await userModel.find() as IUser[] | null;
-        if (!users) {
-            throw new Error(`Users not found (404)`)
+        const users = await userModel.find() as IUser[]
+        if (!users || users.length === 0) {
+            throw new AppError("Users not found", 404)
         }
-        return users;
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            throw new Error(`Error saving user: ${err.message}`);
-        }
-        throw new Error("Unknown error finding users");
+        return users
+    } catch (err) {
+        throw new AppError(`Error finding users: ${(err as Error).message}`, 500)
     }
 }
 
-export const getUserByPkService = async (id: string): Promise<IUser | null> => {
+/** 🔹 Obtener usuario por ID */
+export const getUserByPkService = async (id: string): Promise<IUser> => {
     try {
-        const user = await userModel.findById(id) as IUser | null;
+        const user = await userModel.findById(id) as IUser | null
         if (!user) {
-            throw new Error(`User not found (404)`)
+            throw new AppError("User not found", 404)
         }
-        return user;
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            throw new Error(`Error saving user: ${err.message}`);
-        }
-        throw new Error("Unknown error finding user");
+        return user
+    } catch (err) {
+        throw new AppError(`Error finding user: ${(err as Error).message}`, 500)
     }
 }
 
+/** 🔹 Guardar un nuevo usuario */
 export const saveUserService = async (userSave: IUser): Promise<IUser> => {
     try {
+        // Hashear la contraseña antes de guardar
         userSave.password = await Bcrypt.hash(userSave.password, 12)
 
         const savedUser = await userModel.create(userSave) as IUser
-
         return savedUser
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            throw new Error(`Error saving user: ${err.message}`)
-        }
-        throw new Error("Unknown error saving user")
+    } catch (err) {
+        throw new AppError(`Error saving user: ${(err as Error).message}`, 500)
     }
 }
+
+/** 🔹 Actualizar usuario */
 export const updateUserService = async (id: string, userSave: IUser): Promise<IUser> => {
     try {
         if (userSave.password) {
-            userSave.password = await Bcrypt.hash(userSave.password, 12);
+            userSave.password = await Bcrypt.hash(userSave.password, 12)
         }
-        const updatedUser = await userModel.findByIdAndUpdate
-            (id, userSave, { new: true }) as IUser | null;
+
+        const updatedUser = await userModel.findByIdAndUpdate(id, userSave, { new: true }) as IUser | null
         if (!updatedUser) {
-            throw new Error("User not found");
+            throw new AppError("User not found", 404)
         }
-        return updatedUser;
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            throw new Error(`Error updating user: ${err.message}`);
-        }
-        throw new Error("Unknown error updating user");
+        return updatedUser
+    } catch (err) {
+        throw new AppError(`Error updating user: ${(err as Error).message}`, 500)
     }
 }
 
+/** 🔹 Eliminar usuario */
 export const deleteUserService = async (id: string): Promise<IUser> => {
     try {
-        const deletedUser = await userModel.findByIdAndDelete(id) as IUser | null;
+        const deletedUser = await userModel.findByIdAndDelete(id) as IUser | null
         if (!deletedUser) {
-            throw new Error("User not found");
+            throw new AppError("User not found", 404)
         }
-        return deletedUser;
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            throw new Error(`Error deleting user: ${err.message}`);
-        }
-        throw new Error("Unknown error deleting user");
+        return deletedUser
+    } catch (err) {
+        throw new AppError(`Error deleting user: ${(err as Error).message}`, 500)
     }
 }
 
-export const loginService = async (email: string, password: string): Promise<string | null> => {
+/** 🔹 Login de usuario */
+export const loginService = async (email: string, password: string): Promise<string> => {
     try {
         const user = await userModel.findOne({ email }) as IUser | null
         if (!user) {
-            throw new Error("User not found")
+            throw new AppError("User not found", 404)
         }
 
-        const isMatch: boolean = await Bcrypt.compare(password, user.password);
+        const isMatch = await Bcrypt.compare(password, user.password)
         if (!isMatch) {
-            throw new Error("Invalid credentials")
+            throw new AppError("Invalid credentials", 401)
         }
 
-        // Crear payload con la información que quieres incluir en el token
+        // Crear payload con la información del usuario
         const payload = {
             email: user.email,
-            role: user.role,
+            role: user.role
         }
 
-        // Generar JWT (expira en 1 hora)
+        // Generar JWT con expiración de 1 hora
         const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" })
-
         return token
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            throw new Error(`Error logging in: ${err.message}`)
-        }
-        throw new Error("Unknown error logging in")
+    } catch (err) {
+        throw new AppError(`Error logging in: ${(err as Error).message}`, 500)
     }
 }

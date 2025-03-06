@@ -13,7 +13,6 @@ const app: Application = express();
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 app.use(express.json());
-app.use(errorHandler);
 
 const specs = swaggerJsdoc(options);
 
@@ -29,6 +28,7 @@ app.get('/hi', (req: Request, res: Response) => {
     res.json({ message: "Hi from server!" })
 })
 
+app.use(errorHandler);
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}!`);
 });
